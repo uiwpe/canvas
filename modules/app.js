@@ -13,7 +13,7 @@ class App {
   }
 
   createMesh() {
-    this.mesh = new Mesh(this.layer)
+    this.mesh = new Mesh(this.layer, 0.075)
   }
 
   update(correction = 0) {
@@ -21,7 +21,13 @@ class App {
   }
 
   display() {
-    this.mesh.renderTriangles(this.layer.context)
+    this.layer.context.canvas.width |= 0
+
+    this.mesh.renderCells(this.layer.context)
+    // this.mesh.renderBranches(this.layer.context)
+    // this.mesh.renderTurbulence(this.layer.context)
+    // this.mesh.renderCurves(this.layer.context)
+    // this.mesh.renderTriangles(this.layer.context)
     // this.mesh.renderParticles(this.layer.context)
   }
 }
