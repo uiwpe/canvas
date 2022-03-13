@@ -33,9 +33,9 @@ class Color {
 export class Mesh {
   particles = []
 
-  constructor({width, height}) {
+  constructor({width, height}, modifier = 0.1) {
     this.maxDistance = Math.hypot(width, height)
-    const x = this.maxDistance * 0.1
+    const x = this.maxDistance * modifier
     const y = x * Math.sqrt(3) / 2
     this.step = new Position(x, y)
 
@@ -52,7 +52,7 @@ export class Mesh {
 
     this.offset.setExtra(this.step.x / 4)
 
-    this.color = new Color(160, 24)
+    this.color = new Color(160, 60)
 
     this.createVertex()
     this.createTriangles()
@@ -73,7 +73,7 @@ export class Mesh {
         const velocity = Math.random() * 2 - 1
 
         this.particles.push(
-          new Particle(position, home, angle, radius, velocity)
+          new Particle(position, home, angle, radius, velocity),
         )
       }
     }
@@ -107,6 +107,11 @@ export class Mesh {
     }
   }
 
+  update(correction = 0) {
+    this.updateParticles(correction)
+    this.updateTriangles(correction)
+  }
+
   updateParticles(correction = 0) {
     this.particles.forEach(particle => {
       const {home: {x, y}, radius, velocity} = particle
@@ -116,14 +121,8 @@ export class Mesh {
     })
   }
 
-  update(correction = 0) {
-    this.updateParticles(correction)
-    this.updateTriangles(correction)
-  }
-
   updateTriangles(correction = 0) {
     this.color.timer = (this.color.timer + this.color.speed * correction) % 360
-    console.log(this.color.timer)
   }
 
   renderParticles(context) {
@@ -157,6 +156,185 @@ export class Mesh {
 
       context.fill()
       context.stroke()
+    })
+  }
+
+  renderCurves(context) {
+    this.triangles.forEach(triangle => {
+      const {a, b, c} = triangle
+
+      const position = new Position(
+        (a.x + b.x + c.x) / 3,
+        (a.y + b.y + c.y) / 3,
+      )
+      const distance = Math.hypot(position.x, position.y)
+      const hue = distance / this.maxDistance * this.color.range - this.color.timer // + / -  color change direction
+
+      context.strokeStyle = `hsl(${hue}, 70%, 70%)`
+      context.fillStyle = `hsl(${hue}, 85%, 50%)`
+
+      context.beginPath()
+      context.moveTo(a.x, a.y)
+      context.quadraticCurveTo(position.x, position.y, b.x, b.y)
+      context.quadraticCurveTo(position.x, position.y, c.x, c.y)
+      context.quadraticCurveTo(position.x, position.y, a.x, a.y)
+      context.closePath()
+
+      context.fill()
+    })
+  }
+
+  renderTurbulence(context) {
+    this.triangles.forEach(triangle => {
+      const {a, b, c} = triangle
+
+      const position = new Position(
+        (a.x + b.x + c.x) / 3,
+        (a.y + b.y + c.y) / 3,
+      )
+      const distance = Math.hypot(position.x, position.y)
+      const hue = distance / this.maxDistance * this.color.range - this.color.timer // + / -  color change direction
+
+      context.strokeStyle = `hsl(${hue}, 70%, 70%)`
+      context.fillStyle = `hsl(${hue}, 85%, 50%)`
+
+      context.beginPath()
+      context.moveTo(a.x, a.y)
+      context.lineTo(b.x, b.y)
+      context.lineTo(c.x, c.y)
+      context.closePath()
+
+      // context.fill()
+      context.stroke()
+
+      const [AB, BC, CA] = [
+        new Position(
+          (a.x + b.x) / 2,
+          (a.y + b.y) / 2,
+        ),
+        new Position(
+          (b.x + c.x) / 2,
+          (b.y + c.y) / 2,
+        ),
+        new Position(
+          (c.x + a.x) / 2,
+          (c.y + a.y) / 2,
+        ),
+      ]
+
+      context.beginPath()
+      context.moveTo(AB.x, AB.y)
+      context.lineTo(BC.x, BC.y)
+      context.lineTo(CA.x, CA.y)
+      context.closePath()
+
+      context.stroke()
+    })
+  }
+
+  renderBranches(context) {
+    this.triangles.forEach(triangle => {
+      const {a, b, c} = triangle
+
+      const position = new Position(
+        (a.x + b.x + c.x) / 3,
+        (a.y + b.y + c.y) / 3,
+      )
+      const distance = Math.hypot(position.x, position.y)
+      const hue = distance / this.maxDistance * this.color.range - this.color.timer // + / -  color change direction
+
+      context.strokeStyle = `hsl(${hue}, 70%, 70%)`
+      context.fillStyle = `hsl(${hue + 100}, 85%, 50%)`
+
+      context.beginPath()
+      context.moveTo(a.x, a.y)
+      // context.lineTo(b.x, b.y)
+      context.lineTo(c.x, c.y)
+      // context.closePath()
+      context.stroke()
+
+      const [AB, BC, CA] = [
+        new Position(
+          (a.x + b.x) / 2,
+          (a.y + b.y) / 2,
+        ),
+        new Position(
+          (b.x + c.x) / 2,
+          (b.y + c.y) / 2,
+        ),
+        new Position(
+          (c.x + a.x) / 2,
+          (c.y + a.y) / 2,
+        ),
+      ]
+
+      context.beginPath()
+      context.moveTo(AB.x, AB.y)
+      context.lineTo(CA.x, CA.y)
+      context.stroke()
+
+
+      context.beginPath()
+      context.arc(AB.x, AB.y, 8, 0, Math.PI * 2)
+      context.fill()
+
+
+      context.beginPath()
+      context.arc(BC.x, BC.y, 8, 0, Math.PI * 2)
+      context.fill()
+
+
+      context.beginPath()
+      context.arc(CA.x, CA.y, 8, 0, Math.PI * 2)
+      context.fill()
+    })
+  }
+
+  renderCells(context) {
+    this.triangles.forEach(triangle => {
+      const {a, b, c} = triangle
+
+      const position = new Position(
+        (a.x + b.x + c.x) / 3,
+        (a.y + b.y + c.y) / 3,
+      )
+      const distance = Math.hypot(position.x, position.y)
+      const hue = distance / this.maxDistance * this.color.range - this.color.timer // + / -  color change direction
+
+      context.strokeStyle = `hsl(${hue}, 70%, 70%)`
+      context.fillStyle = `hsl(${hue + 100}, 85%, 50%)`
+
+      context.beginPath()
+      context.moveTo(a.x, a.y)
+      context.lineTo(b.x, b.y)
+      context.lineTo(c.x, c.y)
+      context.closePath()
+      context.stroke()
+
+      const [AB, BC, CA] = [
+        new Position(
+          (a.x + b.x) / 2,
+          (a.y + b.y) / 2,
+        ),
+        new Position(
+          (b.x + c.x) / 2,
+          (b.y + c.y) / 2,
+        ),
+        new Position(
+          (c.x + a.x) / 2,
+          (c.y + a.y) / 2,
+        ),
+      ]
+
+      const dA = Math.hypot(AB.x - position.x, AB.y - position.y)
+      const dB = Math.hypot(BC.x - position.x, BC.y - position.y)
+      const dC = Math.hypot(CA.x - position.x, CA.y - position.y)
+
+      const radius = Math.min(dA, dB, dC) / 2
+
+      context.beginPath()
+      context.arc(position.x, position.y, radius, 0, Math.PI * 2)
+      context.fill()
     })
   }
 }
